@@ -7,3 +7,10 @@ license = "GPL-3.0-only"
 
 [dependencies]
 steamworks = "0.10"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
