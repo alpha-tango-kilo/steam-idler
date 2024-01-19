@@ -1,4 +1,4 @@
-use std::{env, thread::sleep, time::Duration};
+use std::{env, fmt, thread::sleep, time::Duration};
 
 fn main() {
     let mut args = env::args().skip(1);
@@ -20,13 +20,13 @@ fn main() {
     sleep(duration);
 }
 
-fn parse_time(input: impl AsRef<str>) -> Result<Duration, &'static str> {
+fn parse_time(input: impl AsRef<str>) -> Result<Duration, ParseTimeError> {
     let input = input.as_ref();
     let mut duration = Duration::default();
     let mut slice_start = 0;
     for (i, c) in input.chars().enumerate() {
         match c {
-            'd' | 'h' | 'm' => {
+            'd' | 'h' | 'm' | 's' => {
                 if slice_start != i {
                     // Unwrap is okay here as we've verified all previous
                     // characters are ASCII digits
@@ -35,19 +35,39 @@ fn parse_time(input: impl AsRef<str>) -> Result<Duration, &'static str> {
                         'd' => 60 * 60 * 24,
                         'h' => 60 * 60,
                         'm' => 60,
+                        's' => 1,
                         _ => unreachable!(),
                     };
                     duration += Duration::from_secs(value * scale);
                     slice_start = i + 1;
                 } else {
-                    return Err("d/h/m without value");
+                    return Err(ParseTimeError::Valueless(c));
                 }
             },
-            _ if c.is_ascii_digit() => {},
-            _ => return Err("unexpected character"),
+            '0'..='9' => {},
+            _ => return Err(ParseTimeError::Unexpected(c)),
         }
     }
     Ok(duration)
+}
+
+#[derive(Debug, Copy, Clone)]
+enum ParseTimeError {
+    Unexpected(char),
+    Valueless(char),
+}
+
+impl fmt::Display for ParseTimeError {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            ParseTimeError::Unexpected(c) => {
+                write!(f, "unexpected character {c:?}")
+            },
+            ParseTimeError::Valueless(c) => {
+                write!(f, "missing value before {c:?}")
+            },
+        }
+    }
 }
 
 #[cfg(test)]
