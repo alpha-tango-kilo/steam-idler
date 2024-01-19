@@ -11,7 +11,7 @@ fn main() {
         .expect("invalid ID");
     let duration = args
         .next()
-        .map(parse_time)
+        .map(parse_duration)
         .expect("didn't give duration")
         .expect("bad duration");
     let _client = steamworks::Client::init_app(app_id)
@@ -20,7 +20,9 @@ fn main() {
     sleep(duration);
 }
 
-fn parse_time(input: impl AsRef<str>) -> Result<Duration, ParseTimeError> {
+fn parse_duration(
+    input: impl AsRef<str>,
+) -> Result<Duration, ParseDurationError> {
     let input = input.as_ref();
     let mut duration = Duration::default();
     let mut slice_start = 0;
@@ -41,29 +43,29 @@ fn parse_time(input: impl AsRef<str>) -> Result<Duration, ParseTimeError> {
                     duration += Duration::from_secs(value * scale);
                     slice_start = i + 1;
                 } else {
-                    return Err(ParseTimeError::Valueless(c));
+                    return Err(ParseDurationError::Valueless(c));
                 }
             },
             '0'..='9' => {},
-            _ => return Err(ParseTimeError::Unexpected(c)),
+            _ => return Err(ParseDurationError::Unexpected(c)),
         }
     }
     Ok(duration)
 }
 
 #[derive(Debug, Copy, Clone)]
-enum ParseTimeError {
+enum ParseDurationError {
     Unexpected(char),
     Valueless(char),
 }
 
-impl fmt::Display for ParseTimeError {
+impl fmt::Display for ParseDurationError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match *self {
-            ParseTimeError::Unexpected(c) => {
+            ParseDurationError::Unexpected(c) => {
                 write!(f, "unexpected character {c:?}")
             },
-            ParseTimeError::Valueless(c) => {
+            ParseDurationError::Valueless(c) => {
                 write!(f, "missing value before {c:?}")
             },
         }
@@ -74,20 +76,20 @@ impl fmt::Display for ParseTimeError {
 mod tests {
     use std::time::Duration;
 
-    use crate::parse_time;
+    use crate::parse_duration;
 
     const DAY: Duration = Duration::from_secs(60 * 60 * 24);
     const HOUR: Duration = Duration::from_secs(60 * 60);
     const MINUTE: Duration = Duration::from_secs(60);
 
     #[test]
-    fn time_parsing() {
-        assert_eq!(parse_time(""), Ok(Default::default()));
-        assert_eq!(parse_time("1h"), Ok(HOUR));
-        assert_eq!(parse_time("1h20m"), Ok(HOUR + MINUTE * 20));
-        assert_eq!(parse_time("1h20m4d"), Ok(DAY * 4 + HOUR + MINUTE * 20));
+    fn parses_durations() {
+        assert_eq!(parse_duration(""), Ok(Default::default()));
+        assert_eq!(parse_duration("1h"), Ok(HOUR));
+        assert_eq!(parse_duration("1h20m"), Ok(HOUR + MINUTE * 20));
+        assert_eq!(parse_duration("1h20m4d"), Ok(DAY * 4 + HOUR + MINUTE * 20));
 
-        assert!(parse_time("asdf").is_err());
-        assert!(parse_time("365dm").is_err());
+        assert!(parse_duration("asdf").is_err());
+        assert!(parse_duration("365dm").is_err());
     }
 }
