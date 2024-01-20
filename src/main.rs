@@ -1,23 +1,25 @@
-use std::{env, fmt, thread::sleep, time::Duration};
+use std::{env, error::Error, fmt, process, thread::sleep, time::Duration};
 
 fn main() {
-    let mut args = env::args().skip(1);
+    if let Err(why) = idler(env::args().skip(1)) {
+        eprintln!("error: {why}");
+        process::exit(1);
+    }
+}
+
+fn idler(mut args: impl Iterator<Item = String>) -> Result<(), Box<dyn Error>> {
     // 480 for Spacewar
     // 606150 for Moonlighter
-    let app_id = args
-        .next()
-        .expect("didn't give app ID")
-        .parse::<u32>()
-        .expect("invalid ID");
-    let duration = args
-        .next()
-        .map(parse_duration)
-        .expect("didn't give duration")
-        .expect("bad duration");
-    let _client = steamworks::Client::init_app(app_id)
-        .expect("failed to initialise steamworks");
+    let app_id = args.next().ok_or("didn't give app ID")?.parse::<u32>()?;
+    let duration = args.next().ok_or("didn't give duration")?;
+    let duration = parse_duration(duration)?;
+    let _client = match steamworks::Client::init_app(app_id) {
+        Ok(client) => client,
+        Err(_) => return Err("failed to initialise Steamworks".into()),
+    };
     eprintln!("Idling {app_id} for {duration:?}");
     sleep(duration);
+    Ok(())
 }
 
 fn parse_duration(
@@ -71,6 +73,8 @@ impl fmt::Display for ParseDurationError {
         }
     }
 }
+
+impl Error for ParseDurationError {}
 
 #[cfg(test)]
 mod tests {
