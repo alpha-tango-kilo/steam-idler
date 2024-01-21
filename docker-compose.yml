@@ -1,0 +1,9 @@
+version: "3"
+services:
+  steam-idler:
+    build:
+      context: .
+      # dockerfile is resolved relative to context
+      dockerfile: docker/Dockerfile
+    image: steam-idler:latest
+    container_name: steam-idler
