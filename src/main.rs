@@ -42,7 +42,9 @@ fn parse_duration(
                         's' => 1,
                         _ => unreachable!(),
                     };
-                    duration += Duration::from_secs(value * scale);
+                    duration = duration.saturating_add(Duration::from_secs(
+                        value.saturating_mul(scale),
+                    ));
                     slice_start = i + 1;
                 } else {
                     return Err(ParseDurationError::Valueless(c));
