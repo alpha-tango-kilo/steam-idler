@@ -1,4 +1,15 @@
-use std::{env, error::Error, fmt, process, thread::sleep, time::Duration};
+use std::{
+    env,
+    error::Error,
+    fmt,
+    io::{stdout, IsTerminal, Write},
+    process,
+    thread::sleep,
+    time::Duration,
+};
+
+const ONE_SECOND: Duration = Duration::from_secs(1);
+const SPINNER: &[char] = &['|', '/', '-', '\\'];
 
 fn main() {
     if let Err(why) = idler(env::args().skip(1)) {
@@ -17,8 +28,26 @@ fn idler(mut args: impl Iterator<Item = String>) -> Result<(), Box<dyn Error>> {
         Ok(client) => client,
         Err(_) => return Err("failed to initialise Steamworks".into()),
     };
-    eprintln!("Idling {app_id} for {duration:?}");
-    sleep(duration);
+    let mut stdout = stdout();
+    if stdout.is_terminal() {
+        let seconds = duration.as_secs();
+        for current in 0..seconds {
+            let spinner_char =
+                SPINNER[(current % (SPINNER.len() as u64)) as usize];
+            let message = format!(
+                "\rIdling {app_id} for {duration:?}: {:?}, {}% {spinner_char} ",
+                Duration::from_secs(current),
+                69,
+            );
+            stdout.write_all(message.as_bytes()).unwrap();
+            stdout.flush().unwrap();
+            sleep(ONE_SECOND);
+        }
+        println!();
+    } else {
+        eprintln!("Idling {app_id} for {duration:?}");
+        sleep(duration);
+    }
     Ok(())
 }
 
