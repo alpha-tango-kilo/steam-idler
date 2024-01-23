@@ -4,6 +4,14 @@ Trying to be a dead-simple tool to idle Steam games, that doesn't require a GUI 
 
 Currently works fine on systems with Steam installed & running, working on adding Dockerisation to be able to use on systems without window managers or Steam
 
+## Installation
+
+With a Rust toolchain set up, you can run
+
+```shell
+cargo install steam-idler
+```
+
 ## Usage
 
 ```shell
