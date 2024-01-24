@@ -3,7 +3,6 @@ use std::{
     error::Error,
     fmt,
     io::{stderr, IsTerminal, Write},
-    process,
     thread::sleep,
     time::Duration,
 };
@@ -14,16 +13,8 @@ const ONE_MINUTE_SECONDS: u64 = 60;
 
 const SPINNER: &[char] = &['|', '/', '-', '\\'];
 
-fn main() {
-    if let Err(why) = idler(env::args().skip(1)) {
-        eprintln!("error: {why}");
-        process::exit(1);
-    }
-}
-
-fn idler(mut args: impl Iterator<Item = String>) -> Result<(), Box<dyn Error>> {
-    // 480 for Spacewar
-    // 606150 for Moonlighter
+fn main() -> Result<(), Box<dyn Error>> {
+    let mut args = env::args().skip(1);
     let app_id = args.next().ok_or("didn't give app ID")?.parse::<u32>()?;
     let duration = args.next().ok_or("didn't give duration")?;
     let duration = parse_duration(duration)?;
