@@ -39,7 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             stderr.flush().unwrap();
             sleep(Duration::from_secs(1));
         }
-        println!();
+        eprintln!();
     } else {
         eprintln!("Idling {app_id} for {duration:?}");
         sleep(duration);
