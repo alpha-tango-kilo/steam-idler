@@ -3,6 +3,7 @@ use std::{
     error::Error,
     fmt,
     io::{stderr, IsTerminal, Write},
+    num::IntErrorKind,
     thread::sleep,
     time::Duration,
 };
@@ -56,9 +57,17 @@ fn parse_duration(
         match c {
             'd' | 'h' | 'm' | 's' => {
                 if slice_start != i {
-                    // Unwrap is okay here as we've verified all previous
-                    // characters are ASCII digits
-                    let value = input[slice_start..i].parse::<u64>().unwrap();
+                    let value = input[slice_start..i]
+                        .parse::<u64>()
+                        .unwrap_or_else(|err| {
+                            // There shouldn't be a value error as we know
+                            // everything previous is ASCII
+                            debug_assert_eq!(
+                                *err.kind(),
+                                IntErrorKind::PosOverflow,
+                            );
+                            u64::MAX
+                        });
                     let scale = match c {
                         'd' => ONE_DAY_SECONDS,
                         'h' => ONE_HOUR_SECONDS,
@@ -81,7 +90,7 @@ fn parse_duration(
     Ok(duration)
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Copy, Clone, Eq, PartialEq)]
 enum ParseDurationError {
     Unexpected(char),
     Valueless(char),
@@ -179,6 +188,11 @@ mod tests {
         assert_eq!(parse_duration("1h"), Ok(HOUR));
         assert_eq!(parse_duration("1h20m"), Ok(HOUR + MINUTE * 20));
         assert_eq!(parse_duration("1h20m4d"), Ok(DAY * 4 + HOUR + MINUTE * 20));
+        assert_eq!(
+            // 2^64 seconds nyehehehe
+            parse_duration("18446744073709551616s"),
+            Ok(Duration::from_secs(u64::MAX))
+        );
 
         assert!(parse_duration("asdf").is_err());
         assert!(parse_duration("365dm").is_err());
