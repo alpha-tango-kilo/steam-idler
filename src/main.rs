@@ -35,7 +35,7 @@ fn idler(mut args: impl Iterator<Item = String>) -> Result<(), Box<dyn Error>> {
     if stderr.is_terminal() {
         let total_seconds = duration.as_secs();
         let duration = HumanDuration::from(duration);
-        for current in 0..total_seconds {
+        for current in 0..=total_seconds {
             let spinner_char =
                 SPINNER[(current % (SPINNER.len() as u64)) as usize];
             let message = format!(
