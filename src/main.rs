@@ -2,7 +2,7 @@ use std::{
     env,
     error::Error,
     fmt,
-    io::{stdout, IsTerminal, Write},
+    io::{stderr, IsTerminal, Write},
     process,
     thread::sleep,
     time::Duration,
@@ -31,8 +31,8 @@ fn idler(mut args: impl Iterator<Item = String>) -> Result<(), Box<dyn Error>> {
         Ok(client) => client,
         Err(_) => return Err("failed to initialise Steamworks".into()),
     };
-    let mut stdout = stdout();
-    if stdout.is_terminal() {
+    let mut stderr = stderr();
+    if stderr.is_terminal() {
         let total_seconds = duration.as_secs();
         let duration = HumanDuration::from(duration);
         for current in 0..total_seconds {
@@ -43,8 +43,8 @@ fn idler(mut args: impl Iterator<Item = String>) -> Result<(), Box<dyn Error>> {
                 HumanDuration::from_secs(current),
                 current as f32 / total_seconds as f32 * 100f32,
             );
-            stdout.write_all(message.as_bytes()).unwrap();
-            stdout.flush().unwrap();
+            stderr.write_all(message.as_bytes()).unwrap();
+            stderr.flush().unwrap();
             sleep(Duration::from_secs(1));
         }
         println!();

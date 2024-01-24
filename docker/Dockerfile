@@ -5,6 +5,10 @@ RUN cargo build  \
     --features docker \
     --release
 
+# Potential images (smallest to largest):
+# https://hub.docker.com/r/mlinarik/steam/tags
+# https://hub.docker.com/r/tianon/steam/tags
+# https://hub.docker.com/r/josh5/steam-headless/tags
 FROM steamcmd/steamcmd:debian-bookworm
 COPY --from=builder /usr/src/steam-idler/target/release/steam-idler /usr/bin/steam-idler
 
