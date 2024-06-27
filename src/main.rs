@@ -3,6 +3,7 @@ use std::{
     error::Error,
     fmt,
     io::{stderr, IsTerminal, Write},
+    iter,
     num::IntErrorKind,
     thread::sleep,
     time::Duration,
@@ -27,14 +28,23 @@ fn main() -> Result<(), Box<dyn Error>> {
     if stderr.is_terminal() {
         let total_seconds = duration.as_secs();
         let duration = HumanDuration::from(duration);
+
+        let mut previous_length = 0;
         for current in 0..=total_seconds {
             let spinner_char =
                 SPINNER[(current % (SPINNER.len() as u64)) as usize];
-            let message = format!(
-                "\rIdling {app_id} for {duration}: {}, {:.1}% {spinner_char} ",
+            let mut message = format!(
+                "\rIdling {app_id} for {duration}: {}, {:.1}% {spinner_char}",
                 HumanDuration::from_secs(current),
                 current as f32 / total_seconds as f32 * 100f32,
             );
+
+            // If the previous message was longer, pad the end of this one with
+            // whitespace to avoid 'debris' from previous lines still showing
+            let len_diff = message.len().saturating_sub(previous_length);
+            message.extend(iter::repeat(' ').take(len_diff));
+            previous_length = message.len();
+
             stderr.write_all(message.as_bytes()).unwrap();
             stderr.flush().unwrap();
             sleep(Duration::from_secs(1));
