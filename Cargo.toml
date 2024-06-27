@@ -6,7 +6,7 @@ authors = ["alpha-tango-kilo <git@heyatk.com>"]
 license = "GPL-3.0-only"
 
 [dependencies]
-steamworks = "0.10"
+steamworks = "0.11"
 
 [features]
 docker = []
