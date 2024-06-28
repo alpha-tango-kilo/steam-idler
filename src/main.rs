@@ -29,7 +29,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         let total_seconds = duration.as_secs();
         let duration = HumanDuration::from(duration);
 
-        let mut previous_length = 0;
+        let mut previous_length = 0usize;
         for current in 0..=total_seconds {
             let spinner_char =
                 SPINNER[(current % (SPINNER.len() as u64)) as usize];
@@ -41,9 +41,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 
             // If the previous message was longer, pad the end of this one with
             // whitespace to avoid 'debris' from previous lines still showing
-            let len_diff = message.len().saturating_sub(previous_length);
-            message.extend(iter::repeat(' ').take(len_diff));
+            let len_diff = previous_length.saturating_sub(message.len());
+            // Re-assign this now to not count the extra whitespace that gets
+            // added
             previous_length = message.len();
+            message.extend(iter::repeat(' ').take(len_diff));
 
             stderr.write_all(message.as_bytes()).unwrap();
             stderr.flush().unwrap();
