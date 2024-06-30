@@ -51,7 +51,11 @@ fn main() -> Result<(), Box<dyn Error>> {
             stderr.flush().unwrap();
             sleep(Duration::from_secs(1));
         }
-        eprintln!();
+        let mut final_message =
+            format!("Idling {app_id} for {duration}: done!");
+        let len_diff = previous_length.saturating_sub(final_message.len());
+        final_message.extend(iter::repeat(' ').take(len_diff));
+        eprintln!("\r{final_message}");
     } else {
         eprintln!("Idling {app_id} for {duration:?}");
         sleep(duration);
